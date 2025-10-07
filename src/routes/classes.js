@@ -1,30 +1,34 @@
 import express from 'express';
-import Joi from 'joi';
 import Class from '../models/Class.js';
-import { validate } from '../middleware/validate.js';
 
 const r = express.Router();
 
-// Create class (teacher action)
-r.post('/', validate(Joi.object({
-  classCode: Joi.string().min(2).max(32).required(),
-  name: Joi.string().min(2).max(80).required(),
-  grade: Joi.string().max(20).allow('')
-})), async (req,res,next)=>{
-  try{
-    const cls = await Class.create(req.body);
+// Create class (POST /api/classes)
+r.post('/', async (req, res, next) => {
+  try {
+    const { classCode, name, grade } = req.body || {};
+    if (!classCode || !name) {
+      return res.status(400).json({ error: 'classCode and name are required' });
+    }
+    const cls = await Class.create({ classCode, name, grade });
     res.status(201).json(cls);
-  }catch(e){ next(e); }
+  } catch (e) {
+    if (e.code === 11000) {
+      // duplicate classCode
+      return res.status(409).json({ error: 'Class code already exists' });
+    }
+    next(e);
+  }
 });
 
-// Verify class exists (for join screen)
-r.get('/exists', validate(Joi.object({
-  classCode: Joi.string().required()
-})), async (req,res,next)=>{
-  try{
-    const cls = await Class.findOne({ classCode: req.query.classCode }).lean();
+// Check if class exists (GET /api/classes/exists?classCode=CODE)
+r.get('/exists', async (req, res, next) => {
+  try {
+    const code = (req.query.classCode || '').trim();
+    if (!code) return res.status(400).json({ error: 'classCode is required' });
+    const cls = await Class.findOne({ classCode: code }).lean();
     res.json({ exists: !!cls, class: cls || null });
-  }catch(e){ next(e); }
+  } catch (e) { next(e); }
 });
 
 export default r;
