@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 const PassageSchema = new mongoose.Schema({
-  level: { type: String, required: true }, // A-H (extend as needed)
+  level: { type: String, required: true },
   title: { type: String, required: true },
   text: { type: String, required: true },
   active: { type: Boolean, default: true },
