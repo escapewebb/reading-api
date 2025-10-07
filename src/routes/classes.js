@@ -3,7 +3,7 @@ import Class from '../models/Class.js';
 
 const r = express.Router();
 
-// Create class (POST /api/classes)
+// POST /api/classes  → create a class
 r.post('/', async (req, res, next) => {
   try {
     const { classCode, name, grade } = req.body || {};
@@ -14,14 +14,13 @@ r.post('/', async (req, res, next) => {
     res.status(201).json(cls);
   } catch (e) {
     if (e.code === 11000) {
-      // duplicate classCode
       return res.status(409).json({ error: 'Class code already exists' });
     }
     next(e);
   }
 });
 
-// Check if class exists (GET /api/classes/exists?classCode=CODE)
+// GET /api/classes/exists?classCode=CODE  → check if a class exists
 r.get('/exists', async (req, res, next) => {
   try {
     const code = (req.query.classCode || '').trim();
